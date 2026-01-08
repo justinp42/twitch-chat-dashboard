@@ -4,6 +4,11 @@ twitchkeys.txt
 .env.*
 !.env.example
 
+# Local documentation (not for GitHub)
+DEVELOPMENT_LOG.md
+IMPLEMENTATION_PLAN.md
+PRD*.md
+
 # Python
 __pycache__/
 *.py[cod]
