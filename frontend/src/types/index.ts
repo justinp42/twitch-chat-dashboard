@@ -71,3 +71,31 @@ export interface MetricsDataPoint {
   messagesLastMinute: number;
   uniqueChatters: number;
 }
+
+/**
+ * Hype event - detected chat velocity spike
+ */
+export interface HypeEvent {
+  id?: number;
+  channel: string;
+  timestamp: string;
+  velocity: number;
+  baseline_mean: number;
+  baseline_std: number;
+  multiplier: number;
+  top_emotes: [string, number][];
+}
+
+/**
+ * Hype event WebSocket message
+ */
+export interface HypeEventMessage extends WebSocketMessage {
+  type: 'hype_event';
+  channel: string;
+  timestamp: string;
+  velocity: number;
+  baseline_mean: number;
+  baseline_std: number;
+  multiplier: number;
+  top_emotes: [string, number][];
+}

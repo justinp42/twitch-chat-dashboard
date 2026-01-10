@@ -6,17 +6,18 @@
  * - Live velocity and active chatters cards
  * - Trending emotes sidebar
  * - Velocity trend chart with area fill
- * - Highlights feed
+ * - Hype detection and history
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { useMetrics } from '../hooks';
+import { useMetrics, useHypeEvents, useChannels } from '../hooks';
 import { Header } from './Header';
 import { LiveVelocityCard } from './LiveVelocityCard';
 import { ActiveChattersCard } from './ActiveChattersCard';
 import { TrendingEmotes } from './TrendingEmotes';
 import { VelocityTrendChart } from './VelocityTrendChart';
-import { HighlightsFeed } from './HighlightsFeed';
+import { HypeAlert } from './HypeAlert';
+import { HypeHistory } from './HypeHistory';
 
 export function Dashboard() {
   const {
@@ -28,6 +29,22 @@ export function Dashboard() {
     selectedChannel,
     selectChannel,
   } = useMetrics();
+
+  // Hype detection
+  const {
+    currentAlert,
+    events: hypeEvents,
+    dismissAlert,
+    exportCsv,
+  } = useHypeEvents();
+
+  // Channel management
+  const {
+    addChannel,
+    removeChannel,
+    loading: channelLoading,
+    error: channelError,
+  } = useChannels();
 
   // Track previous velocity for percentage change
   const lastUpdateRef = useRef(Date.now());
@@ -51,23 +68,11 @@ export function Dashboard() {
     }
   }, [currentMetrics, peakVelocity]);
 
-  // Placeholder highlights (will be populated from Phase 3 hype detection)
-  const highlights = [
-    {
-      id: '1',
-      type: 'event' as const,
-      title: 'Monitoring Started',
-      description: `Watching ${selectedChannel || 'channel'}`,
-      timestamp: new Date(),
-      isLive: true,
-    },
-  ];
-
-  // Hype alert state (will be controlled by Phase 3)
-  const hypeAlert = {
-    message: 'High Chat Activity',
-    active: currentMetrics ? currentMetrics.messages_per_second > peakVelocity * 0.8 : false,
-  };
+  // Hype alert for header (show if we have a recent hype event)
+  const hypeAlert = currentAlert ? {
+    message: `${currentAlert.velocity.toFixed(0)} msg/s - ${currentAlert.multiplier.toFixed(1)}x spike!`,
+    active: true,
+  } : { message: '', active: false };
 
   return (
     <div style={{
@@ -75,6 +80,11 @@ export function Dashboard() {
       backgroundColor: 'var(--bg-primary)',
       backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(145, 70, 255, 0.08) 0%, transparent 50%)',
     }}>
+      {/* Hype Alert Overlay */}
+      {currentAlert && (
+        <HypeAlert event={currentAlert} onDismiss={dismissAlert} />
+      )}
+
       {/* Header */}
       <Header
         channels={channels}
@@ -82,6 +92,10 @@ export function Dashboard() {
         onChannelChange={selectChannel}
         connectionState={connectionState}
         hypeAlert={hypeAlert}
+        onAddChannel={addChannel}
+        onRemoveChannel={removeChannel}
+        channelLoading={channelLoading}
+        channelError={channelError}
       />
 
       {/* Main content */}
@@ -176,16 +190,16 @@ export function Dashboard() {
               uniqueChatters={currentMetrics.unique_chatters_5min}
             />
 
-            {/* Row 1-2: Trending Emotes (spans 2 rows) */}
+            {/* Row 1-2: Trending Emotes and Hype History (spans 2 rows) */}
             <div style={{ gridRow: 'span 2' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', height: '100%' }}>
                 <TrendingEmotes
                   emotes={currentMetrics.top_emotes}
                   maxDisplay={4}
                 />
-                <HighlightsFeed
-                  highlights={highlights}
-                  onViewHistory={() => console.log('View history')}
+                <HypeHistory
+                  events={hypeEvents}
+                  onExport={() => exportCsv(selectedChannel || undefined)}
                 />
               </div>
             </div>

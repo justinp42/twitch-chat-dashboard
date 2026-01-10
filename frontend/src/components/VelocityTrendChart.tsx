@@ -30,25 +30,27 @@ export function VelocityTrendChart({
 }: VelocityTrendChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('LIVE');
 
-  // Format data for chart
+  // Format data for chart - data comes in per second
   const chartData = data.map((point, index) => {
-    const minutesAgo = data.length - index;
-    let label = 'NOW';
-    if (minutesAgo > 1) {
-      if (minutesAgo >= 60) {
-        label = `${Math.floor(minutesAgo / 60)}H AGO`;
-      } else {
-        label = `${minutesAgo}M AGO`;
-      }
-    }
+    const secondsAgo = data.length - index;
 
     return {
       index,
       value: point.messagesPerSecond,
-      label,
+      secondsAgo,
       time: point.timestamp.toLocaleTimeString(),
     };
   });
+
+  // Get subtitle based on time range
+  const getSubtitle = () => {
+    switch (timeRange) {
+      case 'LIVE': return `Last ${data.length} Seconds`;
+      case '1H': return 'Last 60 Minutes';
+      case '4H': return 'Last 4 Hours';
+      default: return '';
+    }
+  };
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -104,7 +106,7 @@ export function VelocityTrendChart({
             fontWeight: '600',
             color: 'var(--text-primary)',
           }}>
-            Last 60 Minutes
+            {getSubtitle()}
           </div>
         </div>
 
@@ -169,12 +171,37 @@ export function VelocityTrendChart({
               tickFormatter={(value) => {
                 const point = chartData[value];
                 if (!point) return '';
-                const minutesAgo = chartData.length - value;
-                if (minutesAgo === 1) return 'NOW';
-                if (minutesAgo === 15) return '15M';
-                if (minutesAgo === 30) return '30M';
-                if (minutesAgo === 45) return '45M';
-                if (minutesAgo === 60) return '60M';
+                const secondsAgo = chartData.length - value;
+
+                // NOW label for most recent point
+                if (secondsAgo === 1) return 'NOW';
+
+                // Labels based on selected time range
+                if (timeRange === 'LIVE') {
+                  // LIVE: Show every 15 seconds up to 60s
+                  if (secondsAgo === 15) return '15s';
+                  if (secondsAgo === 30) return '30s';
+                  if (secondsAgo === 45) return '45s';
+                  if (secondsAgo === 60) return '60s';
+                } else if (timeRange === '1H') {
+                  // 1H: Show every 10 minutes up to 60m
+                  if (secondsAgo === 600) return '10m';
+                  if (secondsAgo === 1200) return '20m';
+                  if (secondsAgo === 1800) return '30m';
+                  if (secondsAgo === 2400) return '40m';
+                  if (secondsAgo === 3000) return '50m';
+                  if (secondsAgo === 3600) return '60m';
+                } else if (timeRange === '4H') {
+                  // 4H: Show every 30 minutes up to 4h
+                  if (secondsAgo === 1800) return '30m';
+                  if (secondsAgo === 3600) return '1h';
+                  if (secondsAgo === 5400) return '1h30';
+                  if (secondsAgo === 7200) return '2h';
+                  if (secondsAgo === 9000) return '2h30';
+                  if (secondsAgo === 10800) return '3h';
+                  if (secondsAgo === 12600) return '3h30';
+                  if (secondsAgo === 14400) return '4h';
+                }
                 return '';
               }}
             />

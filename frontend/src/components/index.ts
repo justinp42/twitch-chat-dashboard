@@ -6,6 +6,8 @@ export { ActiveChattersCard } from './ActiveChattersCard';
 export { TrendingEmotes } from './TrendingEmotes';
 export { VelocityTrendChart } from './VelocityTrendChart';
 export { HighlightsFeed } from './HighlightsFeed';
+export { HypeAlert } from './HypeAlert';
+export { HypeHistory } from './HypeHistory';
 
 // Legacy components (can be removed later)
 export { ConnectionStatus } from './ConnectionStatus';
